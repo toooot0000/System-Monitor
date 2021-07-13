@@ -1,6 +1,9 @@
 #ifndef SYSTEM_PARSER_H
 #define SYSTEM_PARSER_H
 
+#include <dirent.h>
+#include <unistd.h>
+
 #include <fstream>
 #include <regex>
 #include <string>
@@ -19,15 +22,18 @@ namespace LinuxParser
     const std::string kVersionFilename{ "/version" };
     const std::string kOSPath{ "/etc/os-release" };
     const std::string kPasswordPath{ "/etc/passwd" };
+    const long HERTZ = sysconf(_SC_CLK_TCK);
 
     // System
     float MemoryUtilization();
     long UpTime();
+    long UpTimeDiff();
     std::vector<int> Pids();
     int TotalProcesses();
     int RunningProcesses();
     std::string OperatingSystem();
     std::string Kernel();
+    std::unordered_map<int, std::string>& Users();
 
     // CPU
     enum CPUStates {
@@ -40,11 +46,14 @@ namespace LinuxParser
         kSoftIRQ_,
         kSteal_,
         kGuest_,
-        kGuestNice_
+        kGuestNice_,
+        SIZE
     };
-    std::vector<std::string> CpuUtilization();
+
+    float CpuUtilization();
     long Jiffies();
     long ActiveJiffies();
+    long JiffiesDifference();
     long ActiveJiffies(int pid);
     long IdleJiffies();
 
@@ -53,26 +62,9 @@ namespace LinuxParser
     std::string Ram(int pid);
     std::string Uid(int pid);
     std::string User(int pid);
-    long int UpTime(int pid);
+    float CpuUtilization(int pid);
+    long int StartTime(int pid);
 
-    
-
-    // CPU Utility
-    // long cpuUser;
-    // long cpuNice;
-    // long cpuSystem;
-    // long cpuIdle;
-    // long cpuIowait;
-    // long cpuIrq;
-    // long cpuSoftirq;
-
-    // long cpuPreUser{0};
-    // long cpuPreNice{0};
-    // long cpuPreSystem{0};
-    // long cpuPreIdle{0};
-    // long cpuPreIowait{0};
-    // long cpuPreIrq{0};
-    // long cpuPreSoftirq{0};
 };  // namespace LinuxParser
 
 #endif

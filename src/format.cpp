@@ -10,7 +10,7 @@ using std::ostringstream;
 // INPUT: Long int measuring seconds
 // OUTPUT: HH:MM:SS
 // REMOVE: [[maybe_unused]] once you define the function
-string Format::ElapsedTime(long seconds[[maybe_unused]]) 
+string Format::ElapsedTime(long seconds) 
 {
     int hh = seconds/3600;
     int mm = (seconds - hh*3600)/60;
