@@ -5,6 +5,7 @@
 #include <vector>
 #include <assert.h>
 #include <algorithm>
+#include <unordered_map>
 
 #include "process.h"
 #include "processor.h"
@@ -15,6 +16,28 @@ using std::set;
 using std::size_t;
 using std::string;
 using std::vector;
+
+typedef bool (*Comp)(Process&, Process&);
+const std::unordered_map<System::PROCESS_SORT_BASE, Comp> COMP_MAP
+{
+    {
+        System::PROCESS_SORT_BASE::CPU, 
+        [](Process &p1, Process &p2)->bool{return p1.CpuUtilization()<p2.CpuUtilization();}
+    },
+    {
+        System::PROCESS_SORT_BASE::MEM,
+        [](Process &p1, Process &p2)->bool{return p1.RawRam() < p2.RawRam();}
+    },
+    {
+        System::PROCESS_SORT_BASE::PID,
+        [](Process &p1, Process &p2)->bool{return p1.Pid() < p2.Pid();}
+    },
+    {
+        System::PROCESS_SORT_BASE::USR,
+        [](Process &p1, Process &p2)->bool{return p1.User() < p2.User();}
+    }
+
+};
 
 Processor& System::Cpu() 
 { 
@@ -31,8 +54,8 @@ vector<Process>& System::Processes()
         processes_[i].updateData(newPids[i]);
     }
     while(newPids.size()<processes_.size()) processes_.pop_back();
-    std::sort(processes_.begin(), processes_.end());
-    return processes_; 
+    std::sort(processes_.begin(), processes_.end(), COMP_MAP.at(processSortBase_));
+    return processes_;
 }
 
 std::string System::Kernel() { return LinuxParser::Kernel(); }

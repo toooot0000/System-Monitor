@@ -23,13 +23,11 @@ void Process::updateData(int newPid)
     _starttime = LinuxParser::StartTime(_pid);
     _uptime = LinuxParser::UpTime() - _starttime;
 
-    float _temp = std::stol(LinuxParser::Ram(_pid))/1024.0;
+    _rawRam = std::stol(LinuxParser::Ram(_pid))/1024.0;
     std::stringstream sstream;
     sstream.precision(2);
     sstream.setf(std::ios::fixed);
-    sstream << _temp;
+    sstream << _rawRam;
     _ram = sstream.str();
-
-
 
 }

@@ -10,6 +10,13 @@
 
 class System {
 public:
+    enum PROCESS_SORT_BASE
+    {
+        CPU = 0,
+        MEM,
+        PID,
+        USR,
+    };
     Processor& Cpu();                   // TODO: See src/system.cpp
     std::vector<Process>& Processes();  // TODO: See src/system.cpp
     float MemoryUtilization();          // TODO: See src/system.cpp
@@ -18,10 +25,11 @@ public:
     int RunningProcesses();             // TODO: See src/system.cpp
     std::string Kernel();               // TODO: See src/system.cpp
     std::string OperatingSystem();      // TODO: See src/system.cpp
+    inline void ChangeSortBase(PROCESS_SORT_BASE newBase) { processSortBase_ = newBase; };
 
-    // TODO: Define any necessary private members
 private:
     Processor cpu_ = {};
+    PROCESS_SORT_BASE processSortBase_ = PROCESS_SORT_BASE::CPU;
     std::vector<Process> processes_ = {};
     std::vector<int> pids_  = {};
 };
