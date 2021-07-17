@@ -21,40 +21,41 @@ typedef bool (*Comp)(Process&, Process&);
 const std::unordered_map<System::PROCESS_SORT_BASE, Comp> COMP_MAP
 {
     {
-        System::PROCESS_SORT_BASE::CPU, 
-        [](Process &p1, Process &p2)->bool{return p1.CpuUtilization()<p2.CpuUtilization();}
+        System::PROCESS_SORT_BASE::CPU,
+        [](Process& p1, Process& p2)->bool {return p1.CpuUtilization() > p2.CpuUtilization();}
     },
     {
         System::PROCESS_SORT_BASE::MEM,
-        [](Process &p1, Process &p2)->bool{return p1.RawRam() < p2.RawRam();}
+        [](Process& p1, Process& p2)->bool {return p1.RawRam() > p2.RawRam();}
     },
     {
         System::PROCESS_SORT_BASE::PID,
-        [](Process &p1, Process &p2)->bool{return p1.Pid() < p2.Pid();}
+        [](Process& p1, Process& p2)->bool {return p1.Pid() > p2.Pid();}
     },
     {
         System::PROCESS_SORT_BASE::USR,
-        [](Process &p1, Process &p2)->bool{return p1.User() < p2.User();}
+        [](Process& p1, Process& p2)->bool {return p1.User() > p2.User();}
     }
 
 };
 
-Processor& System::Cpu() 
-{ 
+Processor& System::Cpu()
+{
     return cpu_;
 }
-    
-vector<Process>& System::Processes() 
+
+vector<Process>& System::Processes()
 {
     auto newPids = LinuxParser::Pids();
-    for(unsigned int i = 0; i!=newPids.size(); ++i)
+    for (unsigned int i = 0; i != newPids.size(); ++i)
     {
-        if(i>=processes_.size())
+        if (i >= processes_.size())
             processes_.push_back(Process());
         processes_[i].updateData(newPids[i]);
     }
-    while(newPids.size()<processes_.size()) processes_.pop_back();
+    while (newPids.size() < processes_.size()) processes_.pop_back();
     std::sort(processes_.begin(), processes_.end(), COMP_MAP.at(processSortBase_));
+    if(PROCESS_SORT_REVERSE) std::reverse(processes_.begin(), processes_.end());
     return processes_;
 }
 

@@ -11,5 +11,9 @@ add_executable(monitor ${SOURCES})
 
 set_property(TARGET monitor PROPERTY CXX_STANDARD 17)
 target_link_libraries(monitor ${CURSES_LIBRARIES})
+
+find_package(Threads)
+target_link_libraries(monitor ${CMAKE_THREAD_LIBS_INIT})
+
 # TODO: Run -Werror in CI.
 target_compile_options(monitor PRIVATE -Wall -Wextra)

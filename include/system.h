@@ -17,21 +17,23 @@ public:
         PID,
         USR,
     };
-    Processor& Cpu();                   // TODO: See src/system.cpp
-    std::vector<Process>& Processes();  // TODO: See src/system.cpp
-    float MemoryUtilization();          // TODO: See src/system.cpp
-    long UpTime();                      // TODO: See src/system.cpp
-    int TotalProcesses();               // TODO: See src/system.cpp
-    int RunningProcesses();             // TODO: See src/system.cpp
-    std::string Kernel();               // TODO: See src/system.cpp
-    std::string OperatingSystem();      // TODO: See src/system.cpp
+    bool PROCESS_SORT_REVERSE{ false };
+    Processor& Cpu();
+    std::vector<Process>& Processes();
+    float MemoryUtilization();
+    long UpTime();
+    int TotalProcesses();
+    int RunningProcesses();
+    std::string Kernel();
+    std::string OperatingSystem();
     inline void ChangeSortBase(PROCESS_SORT_BASE newBase) { processSortBase_ = newBase; };
+    inline void FlipSortReverseFlag() { PROCESS_SORT_REVERSE = !PROCESS_SORT_REVERSE; }
 
 private:
     Processor cpu_ = {};
     PROCESS_SORT_BASE processSortBase_ = PROCESS_SORT_BASE::CPU;
     std::vector<Process> processes_ = {};
-    std::vector<int> pids_  = {};
+    std::vector<int> pids_ = {};
 };
 
 #endif

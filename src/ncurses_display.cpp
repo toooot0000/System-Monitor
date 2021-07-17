@@ -3,6 +3,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <iostream>
 
 #include "format.h"
 #include "ncurses_display.h"
@@ -85,31 +86,34 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process>& processes,
     }
 }
 
+void NCursesDisplay::DisplayInstructionBar(WINDOW* window)
+{
+    int row{1};
+    int column{ 2 };
+    mvwprintw(window, row, column, "Sorted by:");
+    column+=10;
+    mvwprintw(window, row, column, "F1-PID");
+    column+=10;
+    mvwprintw(window, row, column, "F2-CPU");
+    column+=10;
+    mvwprintw(window, row, column, "F3-Mem");
+    column+=10;
+    mvwprintw(window, row, column, "F4-User");
+}
 
-void NCursesDisplay::Display() {
-    // initscr();      // start ncurses
-    // noecho();       // do not print input values
-    // cbreak();       // terminate ncurses on ctrl + c
-    // start_color();  // enable color
 
-    // int x_max{ getmaxx(stdscr) };
-    // system_window = newwin(9, x_max - 1, 0, 0);
-    // process_window =
-    //     newwin(3 + n, x_max - 1, system_window->_maxy + 1, 0);
-
-    // while (1) {
+void NCursesDisplay::Update() {
     init_pair(1, COLOR_BLUE, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
     box(system_window, 0, 0);
     box(process_window, 0, 0);
     DisplaySystem(system, system_window);
     DisplayProcesses(system.Processes(), process_window, PROCESS_NUM);
+    DisplayInstructionBar(instr_window);
     wrefresh(system_window);
     wrefresh(process_window);
+    wrefresh(instr_window);
     refresh();
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    // }
-    // endwin();
 }
 
 void NCursesDisplay::Init()
@@ -118,15 +122,82 @@ void NCursesDisplay::Init()
     noecho();       // do not print input values
     cbreak();       // terminate ncurses on ctrl + c
     start_color();  // enable color
-    nodelay(stdscr, true);
+    keypad(stdscr, true);
 
     int x_max{ getmaxx(stdscr) };
     system_window = newwin(9, x_max - 1, 0, 0);
-    process_window =
-        newwin(3 + PROCESS_NUM, x_max - 1, system_window->_maxy + 1, 0);
+    process_window = newwin(3 + PROCESS_NUM, x_max - 1, system_window->_maxy + 1, 0);
+    instr_window = newwin(3, x_max - 1, process_window->_maxy + system_window->_maxy +1, 0);
+    update_time = std::chrono::system_clock::now();
+
 }
 
-int NCursesDisplay::CurrentPressedKey()
+int NCursesDisplay::CurrentPressedKey() const
 {
     return getch();
+}
+
+// main loop
+void NCursesDisplay::MainLoop()
+{
+    while (1)
+    {
+        {
+            std::scoped_lock sl(mutex_update_time);
+            if (update_time <= std::chrono::system_clock::now()) // passed scheduled update time
+            {
+                update_time += update_interval;
+                Update();
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(200)); //sleep for a little while
+    }
+}
+
+void NCursesDisplay::ForceUpdate()
+{
+    std::scoped_lock sl(mutex_update_time);
+    update_time = std::chrono::system_clock::now();
+}
+
+void NCursesDisplay::Start()
+{
+    // Create new thread for input
+    std::thread input_thread(&NCursesDisplay::ProcessInput, this);
+    // Call MainLoop();
+    MainLoop();
+    input_thread.join();
+}
+
+void NCursesDisplay::ProcessInput()
+{
+    while(1)
+    {
+        int tempKey = getch();
+        bool validInput = true;
+        switch (tempKey)
+        {
+        case KEY_F(1):
+            if(tempKey == curKey) system.FlipSortReverseFlag();
+            system.ChangeSortBase(System::PROCESS_SORT_BASE::PID);
+            break;
+        case KEY_F(2):
+            if(tempKey == curKey) system.FlipSortReverseFlag();
+            system.ChangeSortBase(System::PROCESS_SORT_BASE::CPU);
+            break;
+        case KEY_F(3):
+            if(tempKey == curKey) system.FlipSortReverseFlag();
+            system.ChangeSortBase(System::PROCESS_SORT_BASE::MEM);
+            break;
+        case KEY_F(4):
+            if(tempKey == curKey) system.FlipSortReverseFlag();
+            system.ChangeSortBase(System::PROCESS_SORT_BASE::USR);
+            break;
+        default:
+            validInput = false;
+        }
+        curKey = tempKey;
+        if (validInput) ForceUpdate();
+    }
+    
 }
