@@ -6,3 +6,4 @@ build/*
 *.json
 .github/**
 .vscode
+!build/monitor

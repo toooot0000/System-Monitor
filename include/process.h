@@ -19,7 +19,6 @@ public:
     inline bool operator<(Process const& a) const {return a.CpuUtilization()<_CPU;}
     void updateData(int newPid);
 
-    // TODO: Declare any necessary private members
 private:
     int _pid{0};
     std::string _cmd{""};
